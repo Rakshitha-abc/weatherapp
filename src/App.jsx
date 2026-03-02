@@ -25,6 +25,7 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('current');
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('New York');
+  const [units, setUnits] = useState('m'); // 'm' for metric, 's' for scientific, 'f' for fahrenheit
   const [weatherData, setWeatherData] = useState(null);
   const [forecastData, setForecastData] = useState(null);
   const [historyData, setHistoryData] = useState(null);
@@ -33,13 +34,14 @@ const App = () => {
   const [error, setError] = useState(null);
   const [searchHistory, setSearchHistory] = useState(['New York', 'London', 'Tokyo']);
 
-  const fetchData = async (loc) => {
+  const fetchData = async (loc, unit = units) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await weatherApi.getCurrent(loc);
+      const data = await weatherApi.getCurrent(loc, unit);
       setWeatherData(data);
       setLocation(data.location.name);
+      setUnits(unit);
 
       // Auto-fetch forecast if standard plan supports it
       // For this demo, we'll try to fetch but handle fails gracefully
@@ -116,7 +118,18 @@ const App = () => {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.5rem' }}>QUICK FILTERS</p>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {['m', 's', 'f'].map(u => (
-              <span key={u} className="badge badge-cyan" style={{ cursor: 'pointer', opacity: 0.6 }}>{u.toUpperCase()} Units</span>
+              <span
+                key={u}
+                className={`badge ${units === u ? 'badge-cyan' : ''}`}
+                style={{
+                  cursor: 'pointer',
+                  opacity: units === u ? 1 : 0.6,
+                  border: units === u ? '1px solid var(--accent-cyan)' : '1px solid transparent'
+                }}
+                onClick={() => fetchData(location, u)}
+              >
+                {u.toUpperCase()} Units
+              </span>
             ))}
           </div>
         </div>
@@ -193,7 +206,9 @@ const App = () => {
                         <p>{weatherData.location.region}, {weatherData.location.country}</p>
                         <div className="temp-large">
                           {weatherData.current.temperature}°
-                          <span style={{ fontSize: '2rem', marginLeft: '-0.5rem' }}>C</span>
+                          <span style={{ fontSize: '2rem', marginLeft: '-0.5rem' }}>
+                            {units === 'm' ? 'C' : units === 's' ? 'K' : 'F'}
+                          </span>
                         </div>
                         <p style={{ marginTop: '0.5rem', fontWeight: 500 }}>{weatherData.current.weather_descriptions[0]}</p>
                       </div>
@@ -205,7 +220,7 @@ const App = () => {
                         />
                         <div>
                           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Visibility</p>
-                          <h4 style={{ fontSize: '1.25rem' }}>{weatherData.current.visibility} km</h4>
+                          <h4 style={{ fontSize: '1.25rem' }}>{weatherData.current.visibility} {units === 's' ? 'km' : units === 'm' ? 'km' : 'mi'}</h4>
                         </div>
                       </div>
                     </div>
@@ -229,7 +244,7 @@ const App = () => {
                             </div>
                             <span style={{ color: 'var(--text-secondary)' }}>Wind Speed</span>
                           </div>
-                          <span style={{ fontWeight: 600 }}>{weatherData.current.wind_speed} km/h</span>
+                          <span style={{ fontWeight: 600 }}>{weatherData.current.wind_speed} {units === 'm' ? 'km/h' : units === 's' ? 'km/h' : 'mph'}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -238,7 +253,7 @@ const App = () => {
                             </div>
                             <span style={{ color: 'var(--text-secondary)' }}>Feels Like</span>
                           </div>
-                          <span style={{ fontWeight: 600 }}>{weatherData.current.feelslike}°C</span>
+                          <span style={{ fontWeight: 600 }}>{weatherData.current.feelslike}°{units === 'm' ? 'C' : units === 's' ? 'K' : 'F'}</span>
                         </div>
                       </div>
                     </div>

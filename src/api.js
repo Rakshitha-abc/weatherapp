@@ -11,8 +11,8 @@ const apiClient = axios.create({
 });
 
 export const weatherApi = {
-    getCurrent: async (query) => {
-        const { data } = await apiClient.get('/current', { params: { query } });
+    getCurrent: async (query, units = 'm') => {
+        const { data } = await apiClient.get('/current', { params: { query, units } });
         if (data.error) throw new Error(data.error.info);
         return data;
     },
